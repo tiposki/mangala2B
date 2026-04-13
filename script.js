@@ -33,6 +33,247 @@
     const btnVsPlayer = document.getElementById('btn-vs-player');
     const gameoverOverlay = document.getElementById('gameover-overlay');
     const btnPlayAgain = document.getElementById('btn-play-again');
+    const btnSound = document.getElementById('btn-sound');
+    const iconSoundOn = document.getElementById('icon-sound-on');
+    const iconSoundOff = document.getElementById('icon-sound-off');
+
+    // ===== AUDIO MANAGEMENT =====
+    let audioCtx = null;
+    let bgmOsc = null;
+    let bgmGain = null;
+    let isSoundEnabled = true;
+    let bgmInterval = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function toggleSound() {
+        isSoundEnabled = !isSoundEnabled;
+        if (isSoundEnabled) {
+            iconSoundOn.style.display = 'block';
+            iconSoundOff.style.display = 'none';
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            startBGM();
+        } else {
+            iconSoundOn.style.display = 'none';
+            iconSoundOff.style.display = 'block';
+            stopBGM();
+        }
+    }
+
+    // ---- BGM State ----
+    let bgmMelodyStep = 0;
+    let bgmChordStep = 0;
+    let bgmMelodyInterval = null;
+    let bgmChordInterval = null;
+    let bgmDroneOsc = null;
+    let bgmDroneGain = null;
+    let bgmDroneOsc2 = null;
+    let bgmDroneGain2 = null;
+
+    function startBGM() {
+        if (!isSoundEnabled || !audioCtx) return;
+        if (bgmMelodyInterval) return;
+
+        const now = audioCtx.currentTime;
+
+        // ======= LAYER 1: Warm bass drone (two detuned sines) =======
+        bgmDroneOsc = audioCtx.createOscillator();
+        bgmDroneGain = audioCtx.createGain();
+        bgmDroneOsc.type = 'sine';
+        bgmDroneOsc.frequency.setValueAtTime(110, now); // A2
+        bgmDroneGain.gain.setValueAtTime(0, now);
+        bgmDroneGain.gain.linearRampToValueAtTime(0.018, now + 3);
+        bgmDroneOsc.connect(bgmDroneGain);
+        bgmDroneGain.connect(audioCtx.destination);
+        bgmDroneOsc.start(now);
+
+        bgmDroneOsc2 = audioCtx.createOscillator();
+        bgmDroneGain2 = audioCtx.createGain();
+        bgmDroneOsc2.type = 'sine';
+        bgmDroneOsc2.frequency.setValueAtTime(110.5, now); // slightly detuned for warmth
+        bgmDroneGain2.gain.setValueAtTime(0, now);
+        bgmDroneGain2.gain.linearRampToValueAtTime(0.012, now + 3);
+        bgmDroneOsc2.connect(bgmDroneGain2);
+        bgmDroneGain2.connect(audioCtx.destination);
+        bgmDroneOsc2.start(now);
+
+        // ======= LAYER 2: Evolving chord pads =======
+        const chords = [
+            [220, 261.63, 329.63],   // Am
+            [196, 246.94, 293.66],   // G
+            [174.61, 220, 261.63],   // F
+            [164.81, 196, 246.94],   // Em
+            [220, 277.18, 329.63],   // Am(add9 flavor)
+            [196, 246.94, 311.13],   // G(add#4 flavor)
+            [174.61, 220, 277.18],   // Fmaj7 flavor
+            [164.81, 207.65, 261.63] // Em7 flavor
+        ];
+
+        bgmChordInterval = setInterval(() => {
+            if (!isSoundEnabled || !audioCtx) return;
+            const t = audioCtx.currentTime;
+            const chord = chords[bgmChordStep % chords.length];
+
+            chord.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, t);
+                // stagger attack slightly per note
+                const attack = 0.8 + i * 0.3;
+                const vol = 0.012 + Math.random() * 0.005;
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(vol, t + attack);
+                gain.gain.linearRampToValueAtTime(vol * 0.7, t + 3);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 5.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + 5.8);
+            });
+
+            bgmChordStep++;
+        }, 6000);
+
+        // ======= LAYER 3: Long melodic sequence =======
+        // Notes spanning 3 octaves of A minor pentatonic + some color tones
+        const scale = [
+            220.00, 246.94, 261.63, 293.66, 329.63,  // A3-E4
+            349.23, 392.00, 440.00, 493.88, 523.25,  // F4-C5
+            587.33, 659.25, 698.46, 783.99            // D5-G5
+        ];
+        // 64-step melody with rests (-1) for breathing room
+        const melody = [
+            0,  2,  4,  -1, 3,  5,  4,  2,
+            7,  6,  4,  3,  5,  -1, -1, 2,
+            4,  6,  8,  7,  9,  8,  6,  -1,
+            5,  4,  2,  0,  2,  3,  -1, 0,
+            2,  5,  7,  6,  4,  3,  5,  7,
+            9,  10, 8,  -1, 7,  6,  4,  2,
+            3,  5,  4,  2,  0,  -1, -1, 2,
+            4,  3,  2,  0,  -1, 0,  2,  -1
+        ];
+
+        bgmMelodyInterval = setInterval(() => {
+            if (!isSoundEnabled || !audioCtx) return;
+            const t = audioCtx.currentTime;
+            const noteIdx = melody[bgmMelodyStep % melody.length];
+
+            if (noteIdx === -1) {
+                bgmMelodyStep++;
+                return;
+            }
+            const freq = scale[noteIdx];
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            // Alternate between triangle and sine for tonal variety
+            osc.type = (bgmMelodyStep % 3 === 0) ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(freq, t);
+
+            // Humanized dynamics
+            const vel = 0.022 + Math.random() * 0.012;
+            const dur = 1.2 + Math.random() * 1.3;
+
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(vel, t + 0.06);
+            gain.gain.linearRampToValueAtTime(vel * 0.6, t + dur * 0.6);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + dur + 0.1);
+
+            bgmMelodyStep++;
+        }, 700);
+    }
+
+    function stopBGM() {
+        // Stop drone
+        if (bgmDroneOsc) {
+            try { bgmDroneOsc.stop(); } catch(e) {}
+            bgmDroneOsc.disconnect();
+            bgmDroneOsc = null;
+        }
+        if (bgmDroneGain) { bgmDroneGain.disconnect(); bgmDroneGain = null; }
+        if (bgmDroneOsc2) {
+            try { bgmDroneOsc2.stop(); } catch(e) {}
+            bgmDroneOsc2.disconnect();
+            bgmDroneOsc2 = null;
+        }
+        if (bgmDroneGain2) { bgmDroneGain2.disconnect(); bgmDroneGain2 = null; }
+        // Stop chord pad
+        if (bgmChordInterval) {
+            clearInterval(bgmChordInterval);
+            bgmChordInterval = null;
+        }
+        // Stop melody
+        if (bgmMelodyInterval) {
+            clearInterval(bgmMelodyInterval);
+            bgmMelodyInterval = null;
+        }
+    }
+
+    function playSound(type) {
+        if (!isSoundEnabled || !audioCtx) return;
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'drop') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            gainNode.gain.setValueAtTime(0.05, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'capture') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+            gainNode.gain.setValueAtTime(0.05, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'click') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } else if (type === 'win') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.setValueAtTime(554.37, now + 0.15);
+            osc.frequency.setValueAtTime(659.25, now + 0.3);
+            osc.frequency.setValueAtTime(880, now + 0.45);
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now);
+            osc.stop(now + 1);
+        } else if (type === 'lose') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(150, now + 0.5);
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        }
+    }
 
     // ===== THEME MANAGEMENT =====
     function initTheme() {
@@ -116,13 +357,35 @@
     }
 
     // ===== STONE RENDERING =====
-    function createStoneElements(count, container) {
+    function createStoneElements(count, container, isStore = false) {
         container.innerHTML = '';
-        const maxVisible = Math.min(count, 20);
-        for (let i = 0; i < maxVisible; i++) {
-            const stone = document.createElement('div');
-            stone.className = 'stone';
-            container.appendChild(stone);
+        const limit = isStore ? 35 : 20; // Allow more stones in store
+        const maxVisible = Math.min(count, limit);
+        
+        if (isStore && count > 12) {
+            container.classList.add('scrambled');
+            // Fixed random positions to prevent jumpy movement between identical stone counts
+            // We use seed or stable randomness based on count or just random
+            for (let i = 0; i < maxVisible; i++) {
+                const stone = document.createElement('div');
+                stone.className = 'stone scrambled-stone';
+                // Randomly spread in container bounds (80x80px approx)
+                const rx = 15 + (Math.random() * 70); // 15% to 85% width
+                const ry = 25 + (Math.random() * 50); // 25% to 75% height (safer middle zone)
+                stone.style.left = rx + '%';
+                stone.style.top = ry + '%';
+                stone.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+                // Small variation in scale for "pile" effect
+                stone.style.zIndex = i;
+                container.appendChild(stone);
+            }
+        } else {
+            container.classList.remove('scrambled');
+            for (let i = 0; i < maxVisible; i++) {
+                const stone = document.createElement('div');
+                stone.className = 'stone';
+                container.appendChild(stone);
+            }
         }
     }
 
@@ -144,7 +407,7 @@
         const stonesContainer = pitEl.querySelector('.pit-stones');
         const countEl = pitEl.querySelector('.pit-count');
         countEl.textContent = board[index];
-        createStoneElements(board[index], stonesContainer);
+        createStoneElements(board[index], stonesContainer, false);
     }
 
     function renderStore(player) {
@@ -152,7 +415,7 @@
         const stonesContainer = document.getElementById('store-' + player + '-stones');
         const countEl = document.getElementById('store-' + player + '-count');
         countEl.textContent = board[storeIndex];
-        createStoneElements(board[storeIndex], stonesContainer);
+        createStoneElements(board[storeIndex], stonesContainer, true);
     }
 
     function updateScores() {
@@ -271,10 +534,12 @@
                 title.textContent = '🎉 Oyun Bitti!';
                 msg.textContent = 'Oyuncu 1 kazandı!';
                 setStatus('Oyuncu 1 kazandı! 🎉', true);
+                playSound('win');
             } else {
                 title.textContent = '🎉 Tebrikler!';
                 msg.textContent = 'Oyuncu kazandı!';
                 setStatus('Tebrikler, kazandınız! 🎉', true);
+                playSound('win');
             }
             players[0].classList.add('winner');
         } else if (s2 > s1) {
@@ -282,10 +547,12 @@
                 title.textContent = '🎉 Oyun Bitti!';
                 msg.textContent = 'Oyuncu 2 kazandı!';
                 setStatus('Oyuncu 2 kazandı! 🎉', true);
+                playSound('win');
             } else {
                 title.textContent = '😔 Oyun Bitti';
                 msg.textContent = 'Bilgisayar kazandı!';
                 setStatus('Bilgisayar kazandı. Tekrar deneyin!', true);
+                playSound('lose');
             }
             players[1].classList.add('winner');
         } else {
@@ -400,6 +667,7 @@
 
             // Highlight the pit where stone was dropped
             highlightPit(currentIndex);
+            playSound('drop');
 
             await delay(80);
         }
@@ -450,6 +718,7 @@
                 await delay(400);
                 renderBoard();
                 animateScore(player);
+                playSound('capture');
 
                 setStatus(`${captured} taş ele geçirildi! ✨`, true);
             }
@@ -484,12 +753,27 @@
      * Used during sowing animation to show stones being picked up one by one.
      */
     function updatePitVisual(index, visualCount) {
-        const pitEl = document.getElementById('pit-' + index);
-        if (!pitEl) return;
-        const stonesContainer = pitEl.querySelector('.pit-stones');
-        const countEl = pitEl.querySelector('.pit-count');
+        const isStore = (index === P1_STORE || index === P2_STORE);
+        const containerId = isStore ? 
+            (index === P1_STORE ? 'store-1' : 'store-2') : 
+            'pit-' + index;
+        
+        const parentEl = document.getElementById(containerId);
+        if (!parentEl) return;
+        
+        let stonesContainer;
+        if (isStore) {
+            stonesContainer = document.getElementById('store-' + (index === P1_STORE ? '1' : '2') + '-stones');
+        } else {
+            stonesContainer = parentEl.querySelector('.pit-stones');
+        }
+
+        const countEl = isStore ? 
+            document.getElementById('store-' + (index === P1_STORE ? '1' : '2') + '-count') : 
+            parentEl.querySelector('.pit-count');
+            
         countEl.textContent = visualCount;
-        createStoneElements(visualCount, stonesContainer);
+        createStoneElements(visualCount, stonesContainer, isStore);
     }
 
     function highlightPit(index) {
@@ -628,20 +912,55 @@
 
     // ===== EVENT LISTENERS =====
     function setupEvents() {
+        // Init audio on first interaction if sound is enabled
+        const handleFirstInteraction = () => {
+            if (isSoundEnabled) {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        startBGM();
+                    });
+                } else {
+                    startBGM();
+                }
+            }
+            document.removeEventListener('click', handleFirstInteraction);
+            document.removeEventListener('touchstart', handleFirstInteraction);
+        };
+        document.addEventListener('click', handleFirstInteraction);
+        document.addEventListener('touchstart', handleFirstInteraction);
+
         // Theme toggle
-        btnTheme.addEventListener('click', toggleTheme);
+        btnTheme.addEventListener('click', () => {
+            playSound('click');
+            toggleTheme();
+        });
+
+        // Sound toggle
+        btnSound.addEventListener('click', () => {
+            playSound('click');
+            toggleSound();
+        });
 
         // Help modal
-        btnHelp.addEventListener('click', openModal);
-        btnCloseModal.addEventListener('click', closeModal);
+        btnHelp.addEventListener('click', () => {
+            playSound('click');
+            openModal();
+        });
+        btnCloseModal.addEventListener('click', () => {
+            playSound('click');
+            closeModal();
+        });
 
         // Game mode buttons
         btnVsComputer.addEventListener('click', () => {
+            playSound('click');
             setGameMode('ai');
             closeModal();
             setTimeout(initGame, 300);
         });
         btnVsPlayer.addEventListener('click', () => {
+            playSound('click');
             setGameMode('pvp');
             closeModal();
             setTimeout(initGame, 300);
@@ -653,6 +972,7 @@
 
         // Game over modal
         btnPlayAgain.addEventListener('click', () => {
+            playSound('click');
             closeGameOver();
             setTimeout(initGame, 300);
         });
@@ -665,6 +985,7 @@
 
         // New game
         btnNewGame.addEventListener('click', () => {
+            playSound('click');
             openModal();
         });
 
@@ -715,6 +1036,16 @@
     // ===== INIT =====
     function init() {
         initTheme();
+        
+        // Sync sound UI with initial state
+        if (isSoundEnabled) {
+            iconSoundOn.style.display = 'block';
+            iconSoundOff.style.display = 'none';
+        } else {
+            iconSoundOn.style.display = 'none';
+            iconSoundOff.style.display = 'block';
+        }
+
         setupEvents();
         initGame();
         checkOrientation();
