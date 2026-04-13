@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mangala - Geleneksel Türk Strateji Oyunu. İki kişilik tahta oyununu bilgisayara karşı oynayın.">
+    <title>Mangala - Geleneksel Türk Strateji Oyunu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Portrait Orientation Warning -->
+    <div id="orientation-warning">
+        <div class="orientation-content">
+            <svg class="rotate-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            <p class="orientation-text">Lütfen cihazınızı yan çeviriniz.</p>
+            <p class="orientation-subtext">Bu oyun yatay modda en iyi şekilde oynanır.</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header id="app-header">
+        <div class="header-left">
+            <button id="btn-help" class="icon-btn" title="Nasıl Oynanır?" aria-label="Nasıl Oynanır?">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </button>
+        </div>
+        <div class="header-center">
+            <h1 id="game-title">Mangala</h1>
+            <p class="subtitle">Geleneksel Türk Strateji Oyunu</p>
+        </div>
+        <div class="header-right">
+            <button id="btn-theme" class="icon-btn" title="Tema Değiştir" aria-label="Tema Değiştir">
+                <svg id="icon-sun" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg id="icon-moon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Game Status Bar -->
+    <div id="status-bar">
+        <div id="status-message">Oynamak için bir çukur seçin</div>
+    </div>
+
+    <!-- Main Game Area -->
+    <main id="game-container">
+        <!-- Board -->
+        <div id="board">
+            <!-- Player 2 Store (Left) -->
+            <div class="store store-left" id="store-2">
+                <div class="store-label" id="player2-name">Bilgisayar</div>
+                <div class="store-stones" id="store-2-stones"></div>
+                <div class="store-count" id="store-2-count">0</div>
+            </div>
+
+            <!-- Pits Area -->
+            <div id="pits-area">
+                <!-- Player 2 Pits (Top Row) - Right to Left -->
+                <div class="pit-row" id="row-player2">
+                    <div class="pit pit-p2" data-pit="12" id="pit-12"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p2" data-pit="11" id="pit-11"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p2" data-pit="10" id="pit-10"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p2" data-pit="9" id="pit-9"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p2" data-pit="8" id="pit-8"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p2" data-pit="7" id="pit-7"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                </div>
+                <!-- Player 1 Pits (Bottom Row) - Left to Right -->
+                <div class="pit-row" id="row-player1">
+                    <div class="pit pit-p1" data-pit="0" id="pit-0"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p1" data-pit="1" id="pit-1"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p1" data-pit="2" id="pit-2"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p1" data-pit="3" id="pit-3"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p1" data-pit="4" id="pit-4"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                    <div class="pit pit-p1" data-pit="5" id="pit-5"><div class="pit-stones"></div><span class="pit-count">4</span></div>
+                </div>
+            </div>
+
+            <!-- Player 1 Store (Right) -->
+            <div class="store store-right" id="store-1">
+                <div class="store-label" id="player1-name">Oyuncu 1</div>
+                <div class="store-stones" id="store-1-stones"></div>
+                <div class="store-count" id="store-1-count">0</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div id="game-controls">
+            <button id="btn-new-game" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Yeni Oyun
+            </button>
+        </div>
+    </main>
+
+    <!-- Instructions Modal -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div id="modal" class="modal">
+            <button id="btn-close-modal" class="modal-close" aria-label="Kapat">&times;</button>
+            <div class="modal-header-modes">
+                <button id="btn-vs-computer" class="btn btn-primary btn-modal btn-mode">
+                    <span class="btn-mode-icon">🤖</span>
+                    <span class="btn-mode-text">
+                        <span class="btn-mode-title">Bilgisayara Karşı</span>
+                        <span class="btn-mode-desc">Yapay zekâya karşı oyna</span>
+                    </span>
+                </button>
+                <button id="btn-vs-player" class="btn btn-secondary btn-modal btn-mode">
+                    <span class="btn-mode-icon">👥</span>
+                    <span class="btn-mode-text">
+                        <span class="btn-mode-title">İki Kişi</span>
+                        <span class="btn-mode-desc">Arkadaşına karşı oyna</span>
+                    </span>
+                </button>
+            </div>
+            <div class="modal-header">
+                <h2>Mangala Nasıl Oynanır?</h2>
+            </div>
+            <div class="modal-body">
+                <div class="rule-section">
+                    <h3>Amaç</h3>
+                    <p>Rakibinden daha fazla taşı hazinende topla. Her oyuncunun <strong>6 çukuru</strong> ve <strong>1 hazinesi</strong> var. Başlangıçta her çukurda <strong>4 taş</strong> bulunur.</p>
+                </div>
+
+                <div class="rule-section">
+                    <h3>Oynanış</h3>
+                    <ul>
+                        <li>Sıra sendeyken kendi tarafındaki bir çukura tıkla.</li>
+                        <li>İçindeki taşlar alınır ve sağa doğru (saat yönünün tersine) her çukura birer birer bırakılarak dağıtılır.</li>
+                        <li>Dağıtım sırasında kendi hazinene uğrarsan taşı bırakır, rakibin hazinesini atlayıp devam edersin.</li>
+                        <li>Çukurlarındaki taşları ilk bitiren oyuncu, rakibin tarafında kalan tüm taşları da kazanır ve oyun biter.</li>
+                    </ul>
+                </div>
+
+                <div class="rule-section">
+                    <h3>Özel Kurallar</h3>
+                    <ul>
+                        <li>Son taş <strong>kendi hazinene</strong> düşerse tekrar oynarsın.</li>
+                        <li>Son taş kendi tarafındaki <strong>boş çukura</strong> düşerse, o taş ve karşısındaki rakip taşları hazinene eklenir.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-overlay" class="modal-overlay">
+        <div id="gameover-modal" class="modal modal-small">
+            <div class="modal-header">
+                <h2 id="gameover-title">🎉 Oyun Bitti!</h2>
+            </div>
+            <div class="modal-body">
+                <div class="gameover-scores">
+                    <div class="gameover-player">
+                        <span class="gameover-emoji" id="gameover-emoji-1">😊</span>
+                        <span class="gameover-label" id="gameover-label-1">Oyuncu 1</span>
+                        <span class="gameover-score" id="final-score-1">0</span>
+                    </div>
+                    <div class="gameover-vs">VS</div>
+                    <div class="gameover-player">
+                        <span class="gameover-emoji" id="gameover-emoji-2">🤖</span>
+                        <span class="gameover-label" id="gameover-label-2">Bilgisayar</span>
+                        <span class="gameover-score" id="final-score-2">0</span>
+                    </div>
+                </div>
+                <p id="gameover-message" class="gameover-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-play-again" class="btn btn-primary btn-modal">Tekrar Oyna</button>
+            </div>
+        </div>
+    </div>
+
+    <footer id="app-footer">
+        <p>Mangala &bull; Geleneksel Türk Zekâ ve Strateji Oyunu</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
