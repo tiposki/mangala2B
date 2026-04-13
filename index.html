@@ -39,6 +39,18 @@
             <p class="subtitle">Geleneksel Türk Strateji Oyunu</p>
         </div>
         <div class="header-right">
+            <button id="btn-sound" class="icon-btn" title="Ses Aç/Kapat" aria-label="Ses Aç/Kapat">
+                <svg id="icon-sound-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+                <svg id="icon-sound-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <line x1="23" y1="9" x2="17" y2="15"/>
+                    <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+            </button>
             <button id="btn-theme" class="icon-btn" title="Tema Değiştir" aria-label="Tema Değiştir">
                 <svg id="icon-sun" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="5"/>
@@ -68,6 +80,7 @@
                 <div class="store-label" id="player2-name">Bilgisayar</div>
                 <div class="store-stones" id="store-2-stones"></div>
                 <div class="store-count" id="store-2-count">0</div>
+                <div class="store-treasure-label">HAZİNE</div>
             </div>
 
             <!-- Pits Area -->
@@ -97,6 +110,7 @@
                 <div class="store-label" id="player1-name">Oyuncu 1</div>
                 <div class="store-stones" id="store-1-stones"></div>
                 <div class="store-count" id="store-1-count">0</div>
+                <div class="store-treasure-label">HAZİNE</div>
             </div>
         </div>
 
@@ -133,13 +147,9 @@
             </div>
             <div class="modal-header">
                 <h2>Mangala Nasıl Oynanır?</h2>
+                <p class="modal-intro">Oyunun sonunda hazinesinde daha çok taş olan oyuncu oyunu kazanır. Her oyuncunun <strong>6 çukuru</strong> ve <strong>1 hazinesi</strong> var. Başlangıçta her çukurda <strong>4 taş</strong> bulunuyor.</p>
             </div>
             <div class="modal-body">
-                <div class="rule-section">
-                    <h3>Amaç</h3>
-                    <p>Rakibinden daha fazla taşı hazinende topla. Her oyuncunun <strong>6 çukuru</strong> ve <strong>1 hazinesi</strong> var. Başlangıçta her çukurda <strong>4 taş</strong> bulunur.</p>
-                </div>
-
                 <div class="rule-section">
                     <h3>Oynanış</h3>
                     <ul>
