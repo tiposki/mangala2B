@@ -36,6 +36,9 @@
     const btnSound = document.getElementById('btn-sound');
     const iconSoundOn = document.getElementById('icon-sound-on');
     const iconSoundOff = document.getElementById('icon-sound-off');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    const iconMaximize = document.getElementById('icon-maximize');
+    const iconMinimize = document.getElementById('icon-minimize');
 
     // ===== AUDIO MANAGEMENT =====
     let audioCtx = null;
@@ -298,6 +301,29 @@
         } else {
             iconSun.style.display = 'none';
             iconMoon.style.display = 'block';
+        }
+    }
+
+    // ===== FULLSCREEN MANAGEMENT =====
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    function updateFullscreenIcon() {
+        if (document.fullscreenElement) {
+            iconMaximize.style.display = 'none';
+            iconMinimize.style.display = 'block';
+        } else {
+            iconMaximize.style.display = 'block';
+            iconMinimize.style.display = 'none';
         }
     }
 
@@ -941,6 +967,14 @@
             playSound('click');
             toggleSound();
         });
+
+        // Fullscreen toggle
+        btnFullscreen.addEventListener('click', () => {
+            playSound('click');
+            toggleFullscreen();
+        });
+
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
 
         // Help modal
         btnHelp.addEventListener('click', () => {
